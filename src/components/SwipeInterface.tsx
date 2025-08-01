@@ -89,6 +89,10 @@ const {
 
 // ✅ Then decide what to display
 const displayQuestions = filteredQuestions.length > 0 ? filteredQuestions : questions;
+console.log("🧠 Total Questions:", questions.length);
+console.log("🔍 Filtered Questions:", filteredQuestions.length);
+console.log("🎯 Displayed Questions:", displayQuestions.length);
+console.log("🧪 Current Filters:", filters);
 
 
 
