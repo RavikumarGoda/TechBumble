@@ -1,73 +1,88 @@
-# Welcome to your Lovable project
+# ⚡ TechBumble
 
-## Project info
+> Swipe. Solve. Repeat.  
+> A Gen Z-style daily interview prep app for the modern coder.
 
-**URL**: https://lovable.dev/projects/2b925e32-14fa-4654-a50c-c0da24fd74bd
+TechBumble is your aesthetic, dark-themed, swipeable web app for DSA, System Design, and HR prep. Built to keep you consistent, motivated, and *just cracked out enough* to ace your dream role — one swipe at a time.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🌟 Features
 
-**Use Lovable**
+- 🎴 **Swipeable Interface** – Swipe right to mark solved, swipe up to save.
+- 🧠 **Daily Question Sessions** – Freshly served bite-sized questions each login.
+- 🏷️ **Company-wise Tags** – Filter questions by company relevance.
+- 🤖 **Gemini API** – Instant AI explanations for every question.
+- 🌚 **Dark Mode UI** – Sleek Gen Z-friendly visuals & buttery animations.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2b925e32-14fa-4654-a50c-c0da24fd74bd) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+| Layer      | Tech                            |
+| ---------- | ------------------------------- |
+| Frontend   | React, TypeScript, Tailwind CSS |
+| Auth + DB  | Supabase                        |
+| AI Engine  | Gemini API (Google AI)          |
+| Hosting    | Vercel                          |
+| State Mgmt | Zustand / Context API           |
+| Build Tool | Vite                            |
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🧩 Project Structure
 
-Follow these steps:
+```bash
+TechBumble/
+├── public/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   ├── utils/
+│   └── App.tsx
+├── .env
+├── package.json
+└── README.md
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
 ```
+## Getting Started
 
-**Edit a file directly in GitHub**
+### ✅ Prerequisites
+- Node.js (v18+)  
+- npm or yarn
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### ⚙️ Installation
 
-## What technologies are used for this project?
+```bash
+git clone https://github.com/RavikumarGoda/TechBumble.git
+cd TechBumble
+npm install
+```
+### ⚙️ Environment Setup
 
-This project is built with:
+Create a `.env` file in the root directory and paste:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```env
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_GEMINI_API_KEY=your-gemini-api-key
+```
+### 🚀 Running Locally
 
-## How can I deploy this project?
+Run the app:
 
-Simply open [Lovable](https://lovable.dev/projects/2b925e32-14fa-4654-a50c-c0da24fd74bd) and click on Share -> Publish.
+```bash
+npm run dev
 
-## Can I connect a custom domain to my Lovable project?
+```
+Now open `http://localhost:5173` to view it in the browser.
 
-Yes, you can!
+### 📬 Contact
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- GitHub: [@RavikumarGoda](https://github.com/RavikumarGoda)  
+- LinkedIn: [Ravi Kumar Reddy Goda](https://www.linkedin.com/in/ravikumargoda)
