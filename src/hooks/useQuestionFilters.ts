@@ -16,8 +16,7 @@ export interface FilterState {
 }
 
 export const useQuestionFilters = (
-  questions: Question[],
-  solvedIds: string[] = []
+  questions: Question[]
 ) => {
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
@@ -26,7 +25,7 @@ export const useQuestionFilters = (
   });
 
   const filteredQuestions = useMemo(() => {
-    const matchesFilter = (q: Question) => {
+    const matchesFilter = (q: Question): boolean => {
       const categoryMatch = filters.categories.length === 0 || filters.categories.includes(q.category);
       const difficultyMatch = filters.difficulties.length === 0 || filters.difficulties.includes(q.difficulty);
       const companyMatch = filters.companies.length === 0 ||
@@ -35,18 +34,8 @@ export const useQuestionFilters = (
     };
 
     const filtered = questions.filter(matchesFilter);
-    const unsolvedFiltered = filtered.filter(q => !solvedIds.includes(q.id));
-
-    if (unsolvedFiltered.length === 0 && filtered.length > 0) {
-      return filtered; // allow repeats
-    }
-
-    if (unsolvedFiltered.length === 0 && filtered.length === 0) {
-      return questions.length > 0 ? questions : [];
-    }
-
-    return unsolvedFiltered;
-  }, [questions, filters, solvedIds]);
+    return filtered.length > 0 ? filtered : questions; // ✅ Always fallback to all
+  }, [questions, filters]);
 
   const updateFilter = (type: keyof FilterState, value: string) => {
     setFilters(prev => {

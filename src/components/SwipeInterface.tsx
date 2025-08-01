@@ -78,12 +78,18 @@ const SwipeInterface = ({ onShowProfile, sessionState, onSessionStateChange }: S
     }
   }, [questions, currentQuestionIndex, solvedQuestionIds, currentSelections, hasActiveSession, user?.id, onSessionStateChange]);
 
- // ✅ Don't pre-filter here — just get raw questions
-const { filters, filteredQuestions, updateFilter, clearFilters, activeFilterCount } =
-  useQuestionFilters(questions, Array.from(solvedQuestionIds));
+// ✅ Don't pre-filter here — just get raw questions
+const {
+  filters,
+  filteredQuestions,
+  updateFilter,
+  clearFilters,
+  activeFilterCount
+} = useQuestionFilters(questions); // 👈 removed solvedQuestionIds
 
 // ✅ Then decide what to display
 const displayQuestions = filteredQuestions.length > 0 ? filteredQuestions : questions;
+
 
 
   useEffect(() => {
