@@ -520,22 +520,22 @@ const displayQuestions = filteredQuestions.length > 0 ? filteredQuestions : ques
   }
 
   if (displayQuestions.length === 0 && hasActiveSession) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <p className="text-white text-lg sm:text-xl md:text-2xl mb-4">
-            🎉 Congratulations! You've completed all questions!
-          </p>
-          <Button 
-            onClick={handleNewFilters} 
-            className="bg-tech-electric hover:bg-tech-electric/90 px-4 sm:px-6 py-2 text-sm sm:text-base"
-          >
-            Choose New Filters
-          </Button>
-        </div>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
+      <div className="text-center space-y-4">
+        <p className="text-white text-lg sm:text-xl md:text-2xl mb-4">
+          ⚠️ No questions match your current filters.
+        </p>
+        <Button 
+          onClick={handleNewFilters} 
+          className="bg-tech-electric hover:bg-tech-electric/90 px-4 sm:px-6 py-2 text-sm sm:text-base"
+        >
+          Clear Filters & Retry
+        </Button>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   if (hasActiveSession && displayQuestions.length > 0 && currentQuestionIndex < displayQuestions.length) {
     const currentQuestion = displayQuestions[currentQuestionIndex];
