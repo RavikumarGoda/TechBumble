@@ -43,7 +43,21 @@ const SwipeInterface = ({ onShowProfile, sessionState, onSessionStateChange }: S
   const validSessionState = isSessionFromCurrentUser ? sessionState : null;
   
   // Initialize state from validSessionState or defaults
-  const [questions, setQuestions] = useState<Question[]>(validSessionState?.questions || []);
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+// ✅ Load questions only after session is ready
+useEffect(() => {
+  if (!validSessionState?.questions) return;
+
+  if (validSessionState.questions.length === 0) {
+    console.log("⚠️ Session questions array is empty.");
+    return;
+  }
+
+  console.log("✅ Session questions loaded:", validSessionState.questions.length);
+  setQuestions(validSessionState.questions);
+}, [validSessionState?.questions]);
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(validSessionState?.currentQuestionIndex || 0);
   const [showQuestionSelection, setShowQuestionSelection] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -78,14 +92,14 @@ const SwipeInterface = ({ onShowProfile, sessionState, onSessionStateChange }: S
     }
   }, [questions, currentQuestionIndex, solvedQuestionIds, currentSelections, hasActiveSession, user?.id, onSessionStateChange]);
 
-// ✅ Don't pre-filter here — just get raw questions
 const {
   filters,
   filteredQuestions,
   updateFilter,
   clearFilters,
   activeFilterCount
-} = useQuestionFilters(questions); // 👈 removed solvedQuestionIds
+} = useQuestionFilters(questions); // ✅ RAW questions only — no filtering by solved
+
 
 // ✅ Then decide what to display
 const displayQuestions = filteredQuestions.length > 0 ? filteredQuestions : questions;
