@@ -537,12 +537,12 @@ console.log("🧪 Current Filters:", filters);
     );
   }
 
-  if (displayQuestions.length === 0 && hasActiveSession) {
+if (questions.length === 0 && hasActiveSession) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
       <div className="text-center space-y-4">
         <p className="text-white text-lg sm:text-xl md:text-2xl mb-4">
-          ⚠️ No questions match your current filters.
+          ⚠️ No questions available.
         </p>
         <Button 
           onClick={handleNewFilters} 
@@ -554,7 +554,6 @@ console.log("🧪 Current Filters:", filters);
     </div>
   );
 }
-
   if (hasActiveSession && displayQuestions.length > 0 && currentQuestionIndex < displayQuestions.length) {
     const currentQuestion = displayQuestions[currentQuestionIndex];
 

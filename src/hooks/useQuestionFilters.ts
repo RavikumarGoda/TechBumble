@@ -15,9 +15,7 @@ export interface FilterState {
   companies: string[];
 }
 
-export const useQuestionFilters = (
-  questions: Question[]
-) => {
+export const useQuestionFilters = (questions: Question[]) => {
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     difficulties: [],
@@ -26,15 +24,21 @@ export const useQuestionFilters = (
 
   const filteredQuestions = useMemo(() => {
     const matchesFilter = (q: Question): boolean => {
-      const categoryMatch = filters.categories.length === 0 || filters.categories.includes(q.category);
-      const difficultyMatch = filters.difficulties.length === 0 || filters.difficulties.includes(q.difficulty);
-      const companyMatch = filters.companies.length === 0 ||
+      const categoryMatch =
+        filters.categories.length === 0 || filters.categories.includes(q.category);
+
+      const difficultyMatch =
+        filters.difficulties.length === 0 || filters.difficulties.includes(q.difficulty);
+
+      const companyMatch =
+        filters.companies.length === 0 ||
         filters.companies.some(company => q.companies.includes(company));
+
       return categoryMatch && difficultyMatch && companyMatch;
     };
 
-    const filtered = questions.filter(matchesFilter);
-    return filtered.length > 0 ? filtered : questions; // ✅ Always fallback to all
+    // ❌ Removed fallback to all questions
+    return questions.filter(matchesFilter);
   }, [questions, filters]);
 
   const updateFilter = (type: keyof FilterState, value: string) => {
