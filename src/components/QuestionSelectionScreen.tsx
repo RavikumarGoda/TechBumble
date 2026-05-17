@@ -66,8 +66,7 @@ const QuestionSelectionScreen = ({ onGenerateQuestions, isGenerating }: Question
   };
 
   const canGenerate = selections.categories.length > 0 && 
-                      selections.difficulties.length > 0 && 
-                      selections.companies.length > 0;
+                      selections.difficulties.length > 0;
 
   // Show loading overlay when generating
   if (isGenerating) {

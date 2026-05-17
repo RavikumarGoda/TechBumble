@@ -26,13 +26,13 @@ export const useGeminiAI = () => {
     }
   };
 
-  const generateQuestion = async (category: string, difficulty: string) => {
+  const generateQuestionsBatch = async (category: string, difficulty: string, count: number = 3) => {
     setLoading(true);
     try {
       let promptTemplate = '';
       
       if (category === 'DSA') {
-        promptTemplate = `Generate a concise ${difficulty} level Data Structures and Algorithms interview question for FAST interview preparation. 
+        promptTemplate = `Generate exactly ${count} concise ${difficulty} level Data Structures and Algorithms interview questions for FAST interview preparation. 
         Requirements:
         - ${difficulty === 'Easy' ? 'Simple array/string manipulation or basic recursion' : 
             difficulty === 'Medium' ? 'Dynamic programming, trees, graphs, or complex data structures' : 
@@ -42,9 +42,9 @@ export const useGeminiAI = () => {
         - Perfect for quick understanding and fast practice
         - No examples or lengthy explanations in the description
         
-        Format: Question title on first line, then BRIEF description (under 100 words).`;
+        CRITICAL: Your response MUST be a raw JSON array of objects. Do NOT wrap it in markdown code blocks (\`\`\`json). Each object must have exactly two keys: "title" and "description". Example: [{"title": "Reverse a String", "description": "Write a function that reverses a string. The input string is given as an array of characters."}]`;
       } else if (category === 'System Design') {
-        promptTemplate = `Generate a concise ${difficulty} level System Design interview question for FAST interview preparation.
+        promptTemplate = `Generate exactly ${count} concise ${difficulty} level System Design interview questions for FAST interview preparation.
         Requirements:
         - ${difficulty === 'Easy' ? 'Basic web application or simple service design' : 
             difficulty === 'Medium' ? 'Scalable web services, caching, load balancing' : 
@@ -54,9 +54,9 @@ export const useGeminiAI = () => {
         - Key requirements only, no excessive details
         - Perfect for quick review and fast practice
         
-        Format: Question title on first line, then BRIEF description (under 100 words).`;
+        CRITICAL: Your response MUST be a raw JSON array of objects. Do NOT wrap it in markdown code blocks (\`\`\`json). Each object must have exactly two keys: "title" and "description". Example: [{"title": "Design a URL Shortener", "description": "Design a service like TinyURL that takes a long URL and returns a short URL."}]`;
       } else {
-        promptTemplate = `Generate a concise ${difficulty} level HR/Behavioral interview question for FAST interview preparation.
+        promptTemplate = `Generate exactly ${count} concise ${difficulty} level HR/Behavioral interview questions for FAST interview preparation.
         Requirements:
         - ${difficulty === 'Easy' ? 'Basic personal or career-related question' : 
             difficulty === 'Medium' ? 'Situational or experience-based question' : 
@@ -65,7 +65,7 @@ export const useGeminiAI = () => {
         - Question description should be under 50 words if context is needed
         - Perfect for quick practice and preparation
         
-        Format: Direct question on first line, then minimal context if needed (under 50 words).`;
+        CRITICAL: Your response MUST be a raw JSON array of objects. Do NOT wrap it in markdown code blocks (\`\`\`json). Each object must have exactly two keys: "title" and "description". Example: [{"title": "Tell me about yourself", "description": "Please provide a brief overview of your background, experience, and what brings you to this interview."}]`;
       }
 
       const { data, error } = await supabase.functions.invoke('generate-ai-content', {
@@ -73,9 +73,16 @@ export const useGeminiAI = () => {
       });
 
       if (error) throw error;
-      return data.content;
+      
+      let content = data.content.trim();
+      if (content.startsWith('```json')) content = content.substring(7);
+      if (content.startsWith('```')) content = content.substring(3);
+      if (content.endsWith('```')) content = content.substring(0, content.length - 3);
+      
+      const parsed = JSON.parse(content.trim());
+      return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-      console.error('Error generating question:', error);
+      console.error('Error generating questions batch:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -84,7 +91,7 @@ export const useGeminiAI = () => {
 
   return {
     generateExplanation,
-    generateQuestion,
+    generateQuestionsBatch,
     loading
   };
 };
