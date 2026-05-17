@@ -60,47 +60,21 @@ export const useGeminiAI = () => {
     }
   };
 
-  const generateQuestionsBatch = async (category: string, difficulty: string, count: number = 3) => {
+  const generateAllQuestions = async (categories: string[], difficulties: string[], totalCount: number = 15) => {
     setLoading(true);
     try {
-      let promptTemplate = '';
+      const promptTemplate = `Generate exactly ${totalCount} concise interview questions distributed across these categories: [${categories.join(', ')}] and these difficulties: [${difficulties.join(', ')}].
       
-      if (category === 'DSA') {
-        promptTemplate = `Generate exactly ${count} concise ${difficulty} level Data Structures and Algorithms interview questions for FAST interview preparation. 
-        Requirements:
-        - ${difficulty === 'Easy' ? 'Simple array/string manipulation or basic recursion' : 
-            difficulty === 'Medium' ? 'Dynamic programming, trees, graphs, or complex data structures' : 
-            'Advanced algorithms, complex system optimization, or hard graph problems'}
-        - VERY SHORT problem statement (1-2 sentences ONLY)
-        - Question description should be under 100 words
-        - Perfect for quick understanding and fast practice
-        - No examples or lengthy explanations in the description
-        
-        CRITICAL: Your response MUST be a raw JSON array of objects. Do NOT wrap it in markdown code blocks (\`\`\`json). Each object must have exactly two keys: "title" and "description". Example: [{"title": "Reverse a String", "description": "Write a function that reverses a string. The input string is given as an array of characters."}]`;
-      } else if (category === 'System Design') {
-        promptTemplate = `Generate exactly ${count} concise ${difficulty} level System Design interview questions for FAST interview preparation.
-        Requirements:
-        - ${difficulty === 'Easy' ? 'Basic web application or simple service design' : 
-            difficulty === 'Medium' ? 'Scalable web services, caching, load balancing' : 
-            'Large-scale distributed systems, microservices architecture'}
-        - VERY SHORT problem statement (1-2 sentences ONLY)
-        - Question description should be under 100 words
-        - Key requirements only, no excessive details
-        - Perfect for quick review and fast practice
-        
-        CRITICAL: Your response MUST be a raw JSON array of objects. Do NOT wrap it in markdown code blocks (\`\`\`json). Each object must have exactly two keys: "title" and "description". Example: [{"title": "Design a URL Shortener", "description": "Design a service like TinyURL that takes a long URL and returns a short URL."}]`;
-      } else {
-        promptTemplate = `Generate exactly ${count} concise ${difficulty} level HR/Behavioral interview questions for FAST interview preparation.
-        Requirements:
-        - ${difficulty === 'Easy' ? 'Basic personal or career-related question' : 
-            difficulty === 'Medium' ? 'Situational or experience-based question' : 
-            'Complex leadership, conflict resolution, or strategic thinking question'}
-        - VERY SHORT and direct question (1-2 sentences ONLY)
-        - Question description should be under 50 words if context is needed
-        - Perfect for quick practice and preparation
-        
-        CRITICAL: Your response MUST be a raw JSON array of objects. Do NOT wrap it in markdown code blocks (\`\`\`json). Each object must have exactly two keys: "title" and "description". Example: [{"title": "Tell me about yourself", "description": "Please provide a brief overview of your background, experience, and what brings you to this interview."}]`;
-      }
+      Requirements:
+      - DSA: Simple data structures for Easy, Dynamic programming/graphs for Medium, Advanced algorithms for Hard.
+      - System Design: Basic service design for Easy, Scalable architecture for Medium, Large-scale distributed systems for Hard.
+      - HR: Basic personal for Easy, Situational for Medium, Strategic/Leadership for Hard.
+      - VERY SHORT problem statement (1-2 sentences ONLY)
+      - Question description should be under 100 words
+      - Perfect for quick understanding and fast practice
+      
+      CRITICAL: Your response MUST be a raw JSON array of objects. Do NOT wrap it in markdown code blocks (\`\`\`json). Each object must have exactly four keys: "title", "description", "category", and "difficulty". 
+      Example: [{"title": "Reverse a String", "description": "Write a function that reverses a string.", "category": "DSA", "difficulty": "Easy"}]`;
 
       const { data, error } = await supabase.functions.invoke('generate-ai-content', {
         body: { prompt: promptTemplate, type: 'question' }
@@ -110,7 +84,6 @@ export const useGeminiAI = () => {
       
       let content = data.content.trim();
       
-      // Extract json array using regex in case there's markdown or extra text
       const match = content.match(/\[\s*\{.*\}\s*\]/s);
       if (match) {
         content = match[0];
@@ -124,7 +97,7 @@ export const useGeminiAI = () => {
         throw new Error('Invalid AI response format');
       }
     } catch (error) {
-      console.error('Error generating questions batch:', error);
+      console.error('Error generating all questions:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -133,7 +106,7 @@ export const useGeminiAI = () => {
 
   return {
     generateExplanation,
-    generateQuestionsBatch,
+    generateAllQuestions,
     loading
   };
 };
