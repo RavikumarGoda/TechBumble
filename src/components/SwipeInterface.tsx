@@ -127,28 +127,7 @@ console.log("🧪 Current Filters:", filters);
     }
   }, [currentQuestionIndex, displayQuestions.length, questions.length, currentSelections]);
 
-  // Eager background prefetch for the current question's explanation
-  useEffect(() => {
-    const currentQuestion = displayQuestions[currentQuestionIndex];
-    if (!currentQuestion || explanationCache[currentQuestion.id]) return;
-    
-    const prefetchExplanation = async () => {
-      try {
-        const fullQuestion = `${currentQuestion.title}: ${currentQuestion.description}`;
-        // Prefetch without streaming
-        const expl = await generateExplanation(fullQuestion, false);
-        if (expl) {
-          setExplanationCache(prev => ({ ...prev, [currentQuestion.id]: expl }));
-        }
-      } catch (e) {
-        // Silently ignore background prefetch errors
-      }
-    };
-    
-    // Slight delay to ensure we don't block immediate UI transitions
-    const timeoutId = setTimeout(prefetchExplanation, 500);
-    return () => clearTimeout(timeoutId);
-  }, [currentQuestionIndex, displayQuestions, explanationCache]);
+
 
   const getUserKey = (key: string) => {
     return `techbumble_${user?.id}_${key}`;
