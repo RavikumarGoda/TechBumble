@@ -49,20 +49,38 @@ export const useTouchSwipe = (handlers: SwipeHandlers) => {
     const deltaY = currentPos.current.y - startPos.current.y;
     
     const threshold = 100;
+    const swipeDuration = 200; // ms
     
     // Check for vertical swipe first (up)
     if (deltaY < -threshold && Math.abs(deltaX) < threshold) {
-      handlers.onSwipeUp();
+      setIsDragging(false);
+      setDragOffset({ x: deltaX, y: -window.innerHeight });
+      setTimeout(() => {
+        handlers.onSwipeUp();
+        setDragOffset({ x: 0, y: 0 });
+      }, swipeDuration);
+      return;
     }
     // Then check horizontal swipes
     else if (Math.abs(deltaX) > threshold && Math.abs(deltaY) < threshold) {
+      setIsDragging(false);
       if (deltaX > 0) {
-        handlers.onSwipeRight();
+        setDragOffset({ x: window.innerWidth, y: deltaY });
+        setTimeout(() => {
+          handlers.onSwipeRight();
+          setDragOffset({ x: 0, y: 0 });
+        }, swipeDuration);
       } else {
-        handlers.onSwipeLeft();
+        setDragOffset({ x: -window.innerWidth, y: deltaY });
+        setTimeout(() => {
+          handlers.onSwipeLeft();
+          setDragOffset({ x: 0, y: 0 });
+        }, swipeDuration);
       }
+      return;
     }
     
+    // If not swiped far enough, snap back to center
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
   }, [isDragging, handlers]);

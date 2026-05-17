@@ -47,16 +47,18 @@ const QuestionCard = ({
     }
   };
 
-  const rotation = isDragging ? dragOffset.x * 0.05 : 0;
-  const opacity = isDragging ? Math.max(0.7, 1 - Math.abs(dragOffset.x) * 0.001) : 1;
+  const rotation = isDragging ? dragOffset.x * 0.08 : dragOffset.x * 0.05;
+  const opacity = isDragging ? Math.max(0.6, 1 - Math.abs(dragOffset.x) * 0.001) : Math.max(0, 1 - Math.abs(dragOffset.x) * 0.002);
   const scale = isDragging ? Math.max(0.95, 1 - Math.abs(dragOffset.y) * 0.001) : 1;
 
+  const transitionClass = isDragging ? 'transition-none' : 'transition-transform transition-opacity duration-300 ease-out';
+
   const getSwipeIndicator = () => {
-    if (!isDragging) return null;
+    if (!isDragging && dragOffset.x === 0 && dragOffset.y === 0) return null;
     
     if (dragOffset.y < -50) {
       return (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-pink-500 text-white px-4 py-2 rounded-full font-bold z-10">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-pink-500 text-white px-4 py-2 rounded-full font-bold z-10 transition-opacity">
           SAVE ❤️
         </div>
       );
@@ -64,7 +66,7 @@ const QuestionCard = ({
     
     if (dragOffset.x > 50) {
       return (
-        <div className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-bold z-10">
+        <div className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-bold z-10 transition-opacity">
           SOLVED ✅
         </div>
       );
@@ -72,7 +74,7 @@ const QuestionCard = ({
     
     if (dragOffset.x < -50) {
       return (
-        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-gray-500 text-white px-4 py-2 rounded-full font-bold z-10">
+        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-gray-500 text-white px-4 py-2 rounded-full font-bold z-10 transition-opacity">
           SKIP ⏭️
         </div>
       );
@@ -83,11 +85,11 @@ const QuestionCard = ({
 
   return (
     <>
-      <div className="relative w-full max-w-xs sm:max-w-sm mx-auto">
+      <div className="relative w-full max-w-xs sm:max-w-sm mx-auto perspective-1000">
         <Card 
-          className="bg-gray-800/90 backdrop-blur-sm border-gray-700 cursor-grab active:cursor-grabbing transition-all duration-200 relative overflow-hidden"
+          className={`bg-gray-800/90 backdrop-blur-sm border-gray-700 cursor-grab active:cursor-grabbing relative overflow-hidden will-change-transform ${transitionClass} ${isDragging ? 'shadow-2xl shadow-black/50' : ''}`}
           style={{
-            transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${rotation}deg) scale(${scale})`,
+            transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${rotation}deg) scale(${scale})`,
             opacity: opacity,
           }}
           onTouchStart={handleTouchStart}
