@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Brain, Code, HelpCircle, Loader2 } from 'lucide-react';
 import { Question } from '@/hooks/useQuestionFilters';
 import { useTouchSwipe } from '@/hooks/useTouchSwipe';
+import StreamTyper from './StreamTyper';
 
 interface QuestionCardProps {
   question: Question | null | undefined;
@@ -220,7 +221,7 @@ const QuestionCard = ({
                   </div>
                 ) : (
                   <div className="text-gray-300 whitespace-pre-wrap text-xs sm:text-sm leading-relaxed">
-                    {explanation}
+                    <StreamTyper text={explanation} speed={12} />
                   </div>
                 )}
               </div>
