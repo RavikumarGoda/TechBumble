@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.1"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,56 +13,40 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, type } = await req.json()
-
+    const { prompt } = await req.json()
+    
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
     if (!GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY not configured')
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    // Initialize the official Google Gen AI SDK
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    // Use the reliable flash model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }]
-      })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'Failed to generate content')
-    }
-
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text
-
+    const result = await model.generateContent(prompt);
+    const generatedText = result.response.text();
+    
     return new Response(
       JSON.stringify({ content: generatedText }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
       }
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error generating AI content:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
+      JSON.stringify({ error: error.message || 'Unknown error' }),
+      { 
         status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
       }
     )
   }
