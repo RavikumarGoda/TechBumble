@@ -14,13 +14,14 @@ serve(async (req) => {
 
   try {
     const { prompt, type } = await req.json()
-    
+
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
     if (!GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY not configured')
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,32 +36,32 @@ serve(async (req) => {
     })
 
     const data = await response.json()
-    
+
     if (!response.ok) {
       throw new Error(data.error?.message || 'Failed to generate content')
     }
 
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text
-    
+
     return new Response(
       JSON.stringify({ content: generatedText }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     )
   } catch (error) {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 500,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     )
   }
