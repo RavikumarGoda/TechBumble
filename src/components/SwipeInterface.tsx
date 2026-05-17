@@ -310,10 +310,10 @@ console.log("🧪 Current Filters:", filters);
           description: `Generated ${generatedQuestions.length} fresh questions for you.`
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error generating questions",
-        description: "Please check your internet connection and try again.",
+        description: error.message || "Failed to generate questions. Please try again.",
         variant: "destructive",
       });
       console.error('Error in generateAIQuestions:', error);

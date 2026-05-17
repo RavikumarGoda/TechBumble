@@ -75,12 +75,20 @@ export const useGeminiAI = () => {
       if (error) throw error;
       
       let content = data.content.trim();
-      if (content.startsWith('```json')) content = content.substring(7);
-      if (content.startsWith('```')) content = content.substring(3);
-      if (content.endsWith('```')) content = content.substring(0, content.length - 3);
       
-      const parsed = JSON.parse(content.trim());
-      return Array.isArray(parsed) ? parsed : [];
+      // Extract json array using regex in case there's markdown or extra text
+      const match = content.match(/\[\s*\{.*\}\s*\]/s);
+      if (match) {
+        content = match[0];
+      }
+      
+      try {
+        const parsed = JSON.parse(content);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (parseError) {
+        console.error('Failed to parse AI response as JSON. Raw response:', data.content);
+        throw new Error('Invalid AI response format');
+      }
     } catch (error) {
       console.error('Error generating questions batch:', error);
       throw error;
