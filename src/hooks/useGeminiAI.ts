@@ -1,23 +1,57 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 
 export const useGeminiAI = () => {
   const [loading, setLoading] = useState(false);
 
-  const generateExplanation = async (question: string, includeCode: boolean = false) => {
+  const generateExplanation = async (question: string, includeCode: boolean = false, onChunk?: (text: string) => void) => {
     setLoading(true);
     try {
       const prompt = includeCode 
         ? `Explain this technical interview question in a concise, clear manner with a working solution and code. Keep it focused and to-the-point - no excessive explanations. Include: 1) Brief approach explanation, 2) Clean, well-commented code solution, 3) Time/space complexity. Question: ${question}`
         : `Explain this technical interview question concisely. Provide: 1) Clear problem understanding, 2) Step-by-step approach, 3) Key insights and hints. Keep it brief but complete. Question: ${question}`;
 
-      const { data, error } = await supabase.functions.invoke('generate-ai-content', {
-        body: { prompt, type: 'explanation' }
-      });
+      if (onChunk) {
+        // Use raw fetch for streaming support
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-ai-content`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session?.access_token || SUPABASE_PUBLISHABLE_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prompt, type: 'explanation', stream: true })
+        });
 
-      if (error) throw error;
-      return data.content;
+        if (!response.ok) {
+          throw new Error(`Edge Function returned ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunkText = decoder.decode(value, { stream: true });
+            fullText += chunkText;
+            onChunk(fullText); // pass the accumulated text to the callback
+          }
+        }
+        return fullText;
+      } else {
+        // Fallback to standard invoke if no streaming is requested
+        const { data, error } = await supabase.functions.invoke('generate-ai-content', {
+          body: { prompt, type: 'explanation' }
+        });
+
+        if (error) throw error;
+        return data.content;
+      }
     } catch (error) {
       console.error('Error generating explanation:', error);
       throw error;

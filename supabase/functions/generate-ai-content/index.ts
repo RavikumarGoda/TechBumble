@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt } = await req.json()
+    const { prompt, stream } = await req.json()
     
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
     if (!GEMINI_API_KEY) {
@@ -24,6 +24,34 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     // Use the reliable flash model that is supported by your API key
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    if (stream) {
+      const resultStream = await model.generateContentStream(prompt);
+      
+      const encoder = new TextEncoder();
+      const readableStream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of resultStream.stream) {
+              const chunkText = chunk.text();
+              controller.enqueue(encoder.encode(chunkText));
+            }
+            controller.close();
+          } catch (e) {
+            controller.error(e);
+          }
+        }
+      });
+
+      return new Response(readableStream, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        }
+      });
+    }
 
     const result = await model.generateContent(prompt);
     const generatedText = result.response.text();
