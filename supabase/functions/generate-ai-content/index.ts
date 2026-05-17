@@ -22,8 +22,8 @@ serve(async (req) => {
 
     // Initialize the official Google Gen AI SDK
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    // Use the reliable flash model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Use the reliable flash model that is supported by your API key
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const result = await model.generateContent(prompt);
     const generatedText = result.response.text();
