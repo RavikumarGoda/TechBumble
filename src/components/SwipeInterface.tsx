@@ -102,7 +102,9 @@ const {
 
 
 // ✅ Then decide what to display
-const displayQuestions = filteredQuestions.length > 0 ? filteredQuestions : questions;
+// Only apply filter when at least one filter category is active; otherwise show all questions
+const hasActiveFilters = activeFilterCount > 0;
+const displayQuestions = hasActiveFilters ? filteredQuestions : questions;
 console.log("🧠 Total Questions:", questions.length);
 console.log("🔍 Filtered Questions:", filteredQuestions.length);
 console.log("🎯 Displayed Questions:", displayQuestions.length);
@@ -279,6 +281,18 @@ console.log("🧪 Current Filters:", filters);
         }
       }
       
+      if (generatedQuestions.length === 0) {
+        // AI returned 0 valid questions — don't start a session, go back to selection
+        toast({
+          title: "No questions generated",
+          description: "Couldn't generate questions. Please check your internet connection and try again.",
+          variant: "destructive",
+        });
+        setShowQuestionSelection(true);
+        setHasActiveSession(false);
+        return;
+      }
+
       setQuestions(generatedQuestions);
       setCurrentQuestionIndex(0);
       setSolvedQuestionIds(new Set());
@@ -300,10 +314,12 @@ console.log("🧪 Current Filters:", filters);
     } catch (error) {
       toast({
         title: "Error generating questions",
-        description: "Please try again later.",
+        description: "Please check your internet connection and try again.",
         variant: "destructive",
       });
       console.error('Error in generateAIQuestions:', error);
+      setShowQuestionSelection(true);
+      setHasActiveSession(false);
     } finally {
       setGeneratingQuestions(false);
     }
@@ -329,7 +345,16 @@ console.log("🧪 Current Filters:", filters);
       await generateAIQuestions(filterSelections);
       setFilterGeneratingQuestions(false);
     } else {
-      setShowFilterPanel(false);
+      // Show feedback when filters are incomplete
+      const missing = [];
+      if (filters.categories.length === 0) missing.push('Category');
+      if (filters.difficulties.length === 0) missing.push('Difficulty');
+      if (filters.companies.length === 0) missing.push('Company');
+      toast({
+        title: "Please complete your filter selection",
+        description: `Select at least one: ${missing.join(', ')}`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -537,18 +562,44 @@ console.log("🧪 Current Filters:", filters);
     );
   }
 
-if (questions.length === 0 && hasActiveSession) {
+if (hasActiveSession && displayQuestions.length === 0 && hasActiveFilters) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
       <div className="text-center space-y-4">
-        <p className="text-white text-lg sm:text-xl md:text-2xl mb-4">
-          ⚠️ No questions available.
+        <div className="text-5xl mb-4">🔍</div>
+        <p className="text-white text-lg sm:text-xl md:text-2xl mb-2">
+          No questions match your filters.
+        </p>
+        <p className="text-gray-400 text-sm sm:text-base mb-4">
+          Try selecting different categories, difficulty, or companies.
         </p>
         <Button 
           onClick={handleNewFilters} 
           className="bg-tech-electric hover:bg-tech-electric/90 px-4 sm:px-6 py-2 text-sm sm:text-base"
         >
-          Clear Filters & Retry
+          Change Filters
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+if (questions.length === 0 && hasActiveSession) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
+      <div className="text-center space-y-4">
+        <div className="text-5xl mb-4">⚠️</div>
+        <p className="text-white text-lg sm:text-xl md:text-2xl mb-2">
+          No questions available.
+        </p>
+        <p className="text-gray-400 text-sm sm:text-base mb-4">
+          This may be a connectivity issue. Please try again.
+        </p>
+        <Button 
+          onClick={handleNewFilters} 
+          className="bg-tech-electric hover:bg-tech-electric/90 px-4 sm:px-6 py-2 text-sm sm:text-base"
+        >
+          Try Again
         </Button>
       </div>
     </div>
