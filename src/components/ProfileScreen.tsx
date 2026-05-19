@@ -4,10 +4,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Target, Brain, Code, Loader2, Info } from 'lucide-react';
+import { ArrowLeft, Target, Brain, Code, Loader2, Info, BarChart2, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useGeminiAI } from '@/hooks/useGeminiAI';
 import About from '@/components/About';
+import ActivityHeatmap from '@/components/ActivityHeatmap';
+import CategoryBreakdown from '@/components/CategoryBreakdown';
 
 interface SavedQuestion {
   id: string;
@@ -200,23 +202,59 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           <p className="text-gray-400 text-sm sm:text-base px-4">Welcome back, {profile?.username || user?.email}</p>
         </div>
 
-        {/* Stats card - responsive */}
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-6 sm:mb-8 max-w-sm sm:max-w-md mx-auto">
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
-              <CardTitle className="text-white flex items-center justify-center text-base sm:text-lg">
-                <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-tech-electric" />
-                Total Questions Swiped
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center pt-0 px-4 sm:px-6">
-              <div className="text-3xl sm:text-4xl font-bold text-tech-electric">
-                {profile?.total_questions_swiped || 0}
-              </div>
-              <p className="text-gray-400 text-xs sm:text-sm">questions</p>
-            </CardContent>
-          </Card>
+        {/* ── Top stat chips ── */}
+        <div className="grid grid-cols-3 gap-3 mb-6 max-w-lg mx-auto">
+          <div className="bg-gray-800/60 border border-gray-700/60 rounded-xl p-3 text-center">
+            <div className="text-2xl font-bold text-tech-electric">
+              {profile?.total_questions_swiped || 0}
+            </div>
+            <div className="text-xs text-gray-400 mt-0.5 flex items-center justify-center gap-1">
+              <Target className="w-3 h-3" /> Swiped
+            </div>
+          </div>
+          <div className="bg-gray-800/60 border border-gray-700/60 rounded-xl p-3 text-center">
+            <div className="text-2xl font-bold text-orange-400">
+              {profile?.current_streak || 0}
+            </div>
+            <div className="text-xs text-gray-400 mt-0.5">🔥 Streak</div>
+          </div>
+          <div className="bg-gray-800/60 border border-gray-700/60 rounded-xl p-3 text-center">
+            <div className="text-2xl font-bold text-purple-400">
+              {profile?.longest_streak || 0}
+            </div>
+            <div className="text-xs text-gray-400 mt-0.5">⚡ Best</div>
+          </div>
         </div>
+
+        {/* ── Activity Heatmap ── */}
+        <Card className="bg-gray-800/40 border-gray-700/60 mb-4 sm:mb-6">
+          <CardHeader className="p-4 sm:p-5 pb-2">
+            <CardTitle className="text-white text-sm sm:text-base flex items-center gap-2">
+              <Activity className="w-4 h-4 text-cyan-400" />
+              Activity Heatmap
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-5 pb-4">
+            <ActivityHeatmap
+              currentStreak={profile?.current_streak || 0}
+              longestStreak={profile?.longest_streak || 0}
+              totalSwiped={profile?.total_questions_swiped || 0}
+            />
+          </CardContent>
+        </Card>
+
+        {/* ── Category Breakdown ── */}
+        <Card className="bg-gray-800/40 border-gray-700/60 mb-4 sm:mb-6">
+          <CardHeader className="p-4 sm:p-5 pb-2">
+            <CardTitle className="text-white text-sm sm:text-base flex items-center gap-2">
+              <BarChart2 className="w-4 h-4 text-purple-400" />
+              Saved Questions Analytics
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-5 pb-4">
+            <CategoryBreakdown />
+          </CardContent>
+        </Card>
 
         {/* Saved questions card - fully responsive */}
         <Card className="bg-gray-800/50 border-gray-700">
