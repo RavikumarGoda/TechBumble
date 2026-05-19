@@ -2,10 +2,11 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Brain, Code, HelpCircle, Loader2 } from 'lucide-react';
+import { Brain, Code, HelpCircle, Loader2, Mic } from 'lucide-react';
 import { Question } from '@/hooks/useQuestionFilters';
 import { useTouchSwipe } from '@/hooks/useTouchSwipe';
 import StreamTyper from './StreamTyper';
+import MockInterviewModal from './MockInterviewModal';
 
 interface QuestionCardProps {
   question: Question | null | undefined;
@@ -27,6 +28,7 @@ const QuestionCard = ({
   loadingExplanation
 }: QuestionCardProps) => {
   const [showHint, setShowHint] = useState(false);
+  const [showInterview, setShowInterview] = useState(false);
 
   // Return null if question is undefined or null
   if (!question) {
@@ -160,6 +162,16 @@ const QuestionCard = ({
                 </Button>
               </div>
 
+              {/* Interview Me button */}
+              <Button
+                onClick={() => setShowInterview(true)}
+                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-cyan-900/30 transition-all duration-200"
+                size="sm"
+              >
+                <Mic className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                Interview Me
+              </Button>
+
               {!showHint && (
                 <Button
                   onClick={() => setShowHint(true)}
@@ -228,6 +240,14 @@ const QuestionCard = ({
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Mock Interview Modal */}
+      {showInterview && question && (
+        <MockInterviewModal
+          question={question}
+          onClose={() => setShowInterview(false)}
+        />
       )}
     </>
   );
