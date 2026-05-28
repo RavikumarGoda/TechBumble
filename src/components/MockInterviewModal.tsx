@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 import { Question } from '@/hooks/useQuestionFilters';
 import { Button } from '@/components/ui/button';
 import { X, Send, Bot, User, Loader2, RotateCcw, Mic } from 'lucide-react';
@@ -67,9 +66,6 @@ const MockInterviewModal = ({ question, onClose }: MockInterviewModalProps) => {
     setMessages((prev) => [...prev, { role: 'interviewer', content: '', streaming: true }]);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      // Build the full prompt with system context + conversation history
       const systemPrompt = buildSystemPrompt(question);
       const conversationText = history
         .map((m) => `${m.role === 'interviewer' ? 'Interviewer (Alex)' : 'Candidate'}: ${m.content}`)
@@ -77,16 +73,13 @@ const MockInterviewModal = ({ question, onClose }: MockInterviewModalProps) => {
 
       const fullPrompt = `${systemPrompt}\n\n--- CONVERSATION SO FAR ---\n${conversationText}\n\nInterviewer (Alex):`;
 
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-ai-content`, {
+      const response = await fetch('/api/interview', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token || SUPABASE_PUBLISHABLE_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt: fullPrompt, stream: true }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: fullPrompt }),
       });
 
-      if (!response.ok) throw new Error(`Edge function error: ${response.status}`);
+      if (!response.ok) throw new Error(`Interview API error: ${response.status}`);
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();

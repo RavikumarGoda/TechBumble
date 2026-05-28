@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String         @id @default(cuid())
+  clerkId              String         @unique
+  email                String         @unique
+  username             String?
+  totalQuestionsSwiped Int            @default(0)
+  currentStreak        Int            @default(0)
+  longestStreak        Int            @default(0)
+  lastActivityDate     DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  savedQuestions       SavedQuestion[]
+  activityLogs         UserActivity[]
+}
+
+model Question {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  category    String         // DSA | System Design | HR
+  difficulty  String         // Easy | Medium | Hard
+  companies   String[]
+  explanation String         @db.Text
+  solution    String         @db.Text  // C++ solution
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+
+  savedBy     SavedQuestion[]
+}
+
+model SavedQuestion {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  savedAt    DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+}
+
+model UserActivity {
+  id              String   @id @default(cuid())
+  userId          String
+  activityDate    DateTime @db.Date
+  questionsSwiped Int      @default(0)
+  questionsSolved Int      @default(0)
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, activityDate])
+}

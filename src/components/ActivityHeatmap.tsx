@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Flame, Zap, Calendar } from 'lucide-react';
 
@@ -34,7 +33,7 @@ const getBorderColor = (count: number): string => {
 };
 
 const ActivityHeatmap = ({ currentStreak, longestStreak, totalSwiped }: HeatmapProps) => {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [activityData, setActivityData] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [tooltip, setTooltip] = useState<{ date: string; count: number; x: number; y: number } | null>(null);
@@ -46,24 +45,19 @@ const ActivityHeatmap = ({ currentStreak, longestStreak, totalSwiped }: HeatmapP
 
   const fetchActivity = async () => {
     try {
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      const fromDate = oneYearAgo.toISOString().split('T')[0];
-
-      const { data, error } = await supabase
-        .from('user_activity')
-        .select('activity_date, questions_swiped')
-        .eq('user_id', user?.id)
-        .gte('activity_date', fromDate)
-        .order('activity_date', { ascending: true });
-
-      if (error) throw error;
+      const token = await getToken();
+      const res = await fetch('/api/activity', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Activity fetch failed');
+      const { activity } = await res.json();
 
       const map = new Map<string, number>();
       let activeDays = 0;
-      (data || []).forEach((row) => {
-        const count = row.questions_swiped || 0;
-        map.set(row.activity_date, count);
+      (activity || []).forEach((row: any) => {
+        const dateStr = new Date(row.activityDate).toISOString().split('T')[0];
+        const count = row.questionsSwiped || 0;
+        map.set(dateStr, count);
         if (count > 0) activeDays++;
       });
       setActivityData(map);

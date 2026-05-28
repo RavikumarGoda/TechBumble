@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { BarChart2 } from 'lucide-react';
 
@@ -28,7 +27,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 };
 
 const CategoryBreakdown = () => {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
   const [categoryData, setCategoryData] = useState<BreakdownData[]>([]);
   const [difficultyData, setDifficultyData] = useState<DifficultyData[]>([]);
   const [totalSaved, setTotalSaved] = useState(0);
@@ -51,17 +50,19 @@ const CategoryBreakdown = () => {
 
   const fetchBreakdown = async () => {
     try {
-      const { data, error } = await supabase
-        .from('saved_questions')
-        .select('category, difficulty')
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
+      const token = await getToken();
+      const res = await fetch('/api/saved', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Saved fetch failed');
+      const { saved } = await res.json();
 
       const catMap = new Map<string, number>();
       const diffMap = new Map<string, number>();
 
-      (data || []).forEach((q) => {
+      (saved || []).forEach((s: any) => {
+        const q = s.question;
+        if (!q) return;
         catMap.set(q.category, (catMap.get(q.category) || 0) + 1);
         diffMap.set(q.difficulty, (diffMap.get(q.difficulty) || 0) + 1);
       });
@@ -84,7 +85,7 @@ const CategoryBreakdown = () => {
 
       setCategoryData(catArr);
       setDifficultyData(diffArr);
-      setTotalSaved(data?.length || 0);
+      setTotalSaved(saved?.length || 0);
     } catch (err) {
       console.error('Error fetching category breakdown:', err);
     } finally {

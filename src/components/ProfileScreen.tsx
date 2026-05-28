@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Target, Brain, Code, Loader2, Info, BarChart2, Activity } from 'lucide-react';
@@ -13,12 +12,15 @@ import CategoryBreakdown from '@/components/CategoryBreakdown';
 
 interface SavedQuestion {
   id: string;
-  question_title: string;
-  question_description: string;
-  category: string;
-  difficulty: string;
-  companies: string[];
-  saved_at: string;
+  question: {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    difficulty: string;
+    companies: string[];
+  };
+  savedAt: string;
 }
 
 interface ProfileScreenProps {
@@ -26,7 +28,7 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
-  const { user, signOut } = useAuth();
+  const { user, getToken, signOut } = useAuth();
   const { generateExplanation } = useGeminiAI();
   const [savedQuestions, setSavedQuestions] = useState<SavedQuestion[]>([]);
   const [profile, setProfile] = useState<any>(null);
@@ -57,14 +59,13 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
 
   const fetchProfileData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      setProfile(data);
+      const token = await getToken();
+      const res = await fetch('/api/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const { profile: p } = await res.json();
+      setProfile(p);
     } catch (error: any) {
       console.error('Error fetching profile:', error);
     }
@@ -72,14 +73,13 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
 
   const fetchSavedQuestions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('saved_questions')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('saved_at', { ascending: false });
-      
-      if (error) throw error;
-      setSavedQuestions(data || []);
+      const token = await getToken();
+      const res = await fetch('/api/saved', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Saved fetch failed');
+      const { saved } = await res.json();
+      setSavedQuestions(saved || []);
     } catch (error: any) {
       console.error('Error fetching saved questions:', error);
     } finally {
@@ -100,22 +100,20 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     }
   };
 
-  const removeSavedQuestion = async (questionId: string) => {
+  const removeSavedQuestion = async (savedId: string) => {
     try {
-      const { error } = await supabase
-        .from('saved_questions')
-        .delete()
-        .eq('id', questionId);
-      
-      if (error) throw error;
-      
-      setSavedQuestions(prev => prev.filter(q => q.id !== questionId));
-      toast({ title: "Question removed from saved list" });
+      const token = await getToken();
+      await fetch(`/api/saved?id=${savedId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSavedQuestions(prev => prev.filter(q => q.id !== savedId));
+      toast({ title: 'Question removed from saved list' });
     } catch (error: any) {
       toast({
-        title: "Error removing question",
+        title: 'Error removing question',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
@@ -133,7 +131,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     setExpandedQuestion(key);
     
     try {
-      const fullQuestion = `${question.question_title}: ${question.question_description}`;
+      const fullQuestion = `${question.question.title}: ${question.question.description}`;
       const aiExplanation = await generateExplanation(fullQuestion, includeCode);
       setExplanations(prev => ({ ...prev, [key]: aiExplanation }));
     } catch (error) {
@@ -206,7 +204,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
         <div className="grid grid-cols-3 gap-3 mb-6 max-w-lg mx-auto">
           <div className="bg-gray-800/60 border border-gray-700/60 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-tech-electric">
-              {profile?.total_questions_swiped || 0}
+              {profile?.totalQuestionsSwiped || 0}
             </div>
             <div className="text-xs text-gray-400 mt-0.5 flex items-center justify-center gap-1">
               <Target className="w-3 h-3" /> Swiped
@@ -214,13 +212,13 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           </div>
           <div className="bg-gray-800/60 border border-gray-700/60 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-orange-400">
-              {profile?.current_streak || 0}
+              {profile?.currentStreak || 0}
             </div>
             <div className="text-xs text-gray-400 mt-0.5">🔥 Streak</div>
           </div>
           <div className="bg-gray-800/60 border border-gray-700/60 rounded-xl p-3 text-center">
             <div className="text-2xl font-bold text-purple-400">
-              {profile?.longest_streak || 0}
+              {profile?.longestStreak || 0}
             </div>
             <div className="text-xs text-gray-400 mt-0.5">⚡ Best</div>
           </div>
@@ -236,9 +234,9 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
           </CardHeader>
           <CardContent className="px-4 sm:px-5 pb-4">
             <ActivityHeatmap
-              currentStreak={profile?.current_streak || 0}
-              longestStreak={profile?.longest_streak || 0}
-              totalSwiped={profile?.total_questions_swiped || 0}
+              currentStreak={profile?.currentStreak || 0}
+              longestStreak={profile?.longestStreak || 0}
+              totalSwiped={profile?.totalQuestionsSwiped || 0}
             />
           </CardContent>
         </Card>
@@ -269,7 +267,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
                 {savedQuestions.map((question) => (
                   <div key={question.id} className="bg-gray-700/50 p-3 sm:p-4 rounded-lg">
                     <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:justify-between sm:items-start mb-2">
-                      <h3 className="text-white font-semibold text-sm sm:text-base leading-tight break-words pr-0 sm:pr-4">{question.question_title}</h3>
+                      <h3 className="text-white font-semibold text-sm sm:text-base leading-tight break-words pr-0 sm:pr-4">{question.question.title}</h3>
                       <Button
                         onClick={() => removeSavedQuestion(question.id)}
                         variant="ghost"
@@ -279,22 +277,22 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
                         Remove
                       </Button>
                     </div>
-                    {question.question_description && (
-                      <p className="text-gray-300 text-xs sm:text-sm mb-3 leading-relaxed break-words">{question.question_description}</p>
+                    {question.question.description && (
+                      <p className="text-gray-300 text-xs sm:text-sm mb-3 leading-relaxed break-words">{question.question.description}</p>
                     )}
                     
                     {/* Tags - responsive flex wrap */}
                     <div className="flex flex-wrap gap-1 sm:gap-2 mb-3">
                       <span className={`px-2 py-1 rounded-full text-xs ${
-                        question.difficulty === 'Easy' ? 'bg-green-600' :
-                        question.difficulty === 'Medium' ? 'bg-yellow-600' : 'bg-red-600'
+                        question.question.difficulty === 'Easy' ? 'bg-green-600' :
+                        question.question.difficulty === 'Medium' ? 'bg-yellow-600' : 'bg-red-600'
                       } text-white`}>
-                        {question.difficulty}
+                        {question.question.difficulty}
                       </span>
                       <span className="px-2 py-1 rounded-full text-xs bg-tech-electric text-white">
-                        {question.category}
+                        {question.question.category}
                       </span>
-                      {question.companies.map((company) => (
+                      {question.question.companies.map((company) => (
                         <span key={company} className="px-2 py-1 rounded-full text-xs bg-gray-600 text-white">
                           {company}
                         </span>
