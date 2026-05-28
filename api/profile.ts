@@ -1,14 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClerkClient } from '@clerk/backend';
+import { verifyToken } from '@clerk/backend';
 import { prisma } from '../lib/prisma';
-
-const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 async function getClerkId(req: VercelRequest): Promise<string | null> {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return null;
   try {
-    const payload = await clerk.verifyToken(token);
+    const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
     return payload.sub;
   } catch {
     return null;
@@ -28,16 +26,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const user = await prisma.user.findUnique({ where: { clerkId } });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    if (req.method === 'GET') {
-      return res.status(200).json({ profile: user });
-    }
+    if (req.method === 'GET') return res.status(200).json({ profile: user });
 
     if (req.method === 'PATCH') {
       const { username } = req.body;
-      const updated = await prisma.user.update({
-        where: { clerkId },
-        data: { username },
-      });
+      const updated = await prisma.user.update({ where: { clerkId }, data: { username } });
       return res.status(200).json({ profile: updated });
     }
 

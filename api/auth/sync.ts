@@ -1,15 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClerkClient } from '@clerk/backend';
+import { verifyToken } from '@clerk/backend';
 import { prisma } from '../../lib/prisma';
 
-const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
-
-async function getUserFromRequest(req: VercelRequest) {
+async function getClerkId(req: VercelRequest): Promise<string | null> {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return null;
   try {
-    const payload = await clerk.verifyToken(token);
-    return payload.sub; // clerkId
+    const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
+    return payload.sub;
   } catch {
     return null;
   }
@@ -22,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const clerkId = await getUserFromRequest(req);
+  const clerkId = await getClerkId(req);
   if (!clerkId) return res.status(401).json({ error: 'Unauthorized' });
 
   const { email, username } = req.body;

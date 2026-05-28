@@ -1,14 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClerkClient } from '@clerk/backend';
+import { verifyToken } from '@clerk/backend';
 import { prisma } from '../lib/prisma';
-
-const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 async function getClerkId(req: VercelRequest): Promise<string | null> {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return null;
   try {
-    const payload = await clerk.verifyToken(token);
+    const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
     return payload.sub;
   } catch {
     return null;
@@ -28,7 +26,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   if (req.method === 'GET') {
-    // Return last 365 days of activity for the heatmap
     const since = new Date();
     since.setFullYear(since.getFullYear() - 1);
     const logs = await prisma.userActivity.findMany({
@@ -43,37 +40,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Upsert today's activity
     await prisma.userActivity.upsert({
       where: { userId_activityDate: { userId: user.id, activityDate: today } },
-      update: {
-        questionsSwiped: { increment: questionsSwiped },
-        questionsSolved: { increment: questionsSolved },
-      },
-      create: {
-        userId: user.id,
-        activityDate: today,
-        questionsSwiped,
-        questionsSolved,
-      },
+      update: { questionsSwiped: { increment: questionsSwiped }, questionsSolved: { increment: questionsSolved } },
+      create: { userId: user.id, activityDate: today, questionsSwiped, questionsSolved },
     });
 
-    // Update profile totals + streak
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
-
     const lastDate = user.lastActivityDate;
-    const isConsecutive = lastDate
-      ? new Date(lastDate).toDateString() === yesterday.toDateString()
-      : false;
-    const isAlreadyToday = lastDate
-      ? new Date(lastDate).toDateString() === today.toDateString()
-      : false;
-
+    const isConsecutive = lastDate ? new Date(lastDate).toDateString() === yesterday.toDateString() : false;
+    const isAlreadyToday = lastDate ? new Date(lastDate).toDateString() === today.toDateString() : false;
     let newStreak = user.currentStreak;
-    if (!isAlreadyToday) {
-      newStreak = isConsecutive ? user.currentStreak + 1 : 1;
-    }
+    if (!isAlreadyToday) newStreak = isConsecutive ? user.currentStreak + 1 : 1;
 
     await prisma.user.update({
       where: { id: user.id },
