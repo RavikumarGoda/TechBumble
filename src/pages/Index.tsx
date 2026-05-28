@@ -17,19 +17,22 @@ interface SessionState {
 }
 
 const IndexContent = () => {
-  const { user, loading } = useAuth();
+  const { user, isSignedIn, loading } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<Screen>('swipe');
   const [sessionState, setSessionState] = useState<SessionState | null>(null);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-tech-electric border-t-transparent rounded-full animate-spin" />
+          <div className="text-gray-400 text-sm">Setting up your account...</div>
+        </div>
       </div>
     );
   }
 
-  if (!user) {
+  if (!isSignedIn) {
     return <AuthScreen />;
   }
 
