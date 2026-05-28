@@ -661,7 +661,7 @@ if (questions.length === 0 && hasActiveSession) {
 
   return (
     <QuestionSelectionScreen 
-      onGenerateQuestions={generateAIQuestions}
+      onGenerateQuestions={fetchDBQuestions}
       isGenerating={generatingQuestions}
     />
   );
