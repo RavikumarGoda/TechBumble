@@ -30,8 +30,9 @@ model Question {
   category    String         // DSA | System Design | HR
   difficulty  String         // Easy | Medium | Hard
   companies   String[]
-  explanation String         @db.Text
-  solution    String         @db.Text  // C++ solution
+  explanation   String         @db.Text
+  solution      String         @db.Text  // C++ solution
+  aiExplanation String?        @db.Text  // clear problem explanation + example (no code)
   isActive    Boolean        @default(true)
   createdAt   DateTime       @default(now())
 

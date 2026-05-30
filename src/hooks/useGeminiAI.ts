@@ -5,11 +5,12 @@ export const useGeminiAI = () => {
   const [loading, setLoading] = useState(false);
   const { getToken } = useAuth();
 
-  /** Stream an AI explanation for a question */
+  /** Get AI explanation for a question — serves from DB if cached, else streams from Gemini */
   const generateExplanation = async (
     question: string,
     includeCode: boolean = false,
-    onChunk?: (text: string) => void
+    onChunk?: (text: string) => void,
+    questionId?: string
   ): Promise<string> => {
     setLoading(true);
     try {
@@ -20,7 +21,7 @@ export const useGeminiAI = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ question, includeCode }),
+        body: JSON.stringify({ question, questionId }),
       });
 
       if (!response.ok) throw new Error(`Explain API error: ${response.status}`);

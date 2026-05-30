@@ -424,7 +424,7 @@ console.log("🧪 Current Filters:", filters);
       await generateExplanation(fullQuestion, includeCode, (chunkText) => {
         setLoadingExplanation(false); // Hide spinner as soon as text arrives
         setExplanation(chunkText);
-      });
+      }, question.id);
     } catch (error) {
       setExplanation('Sorry, I could not generate an explanation right now. Please try again later.');
       toast({

@@ -132,7 +132,7 @@ const ProfileScreen = ({ onBack }: ProfileScreenProps) => {
     
     try {
       const fullQuestion = `${question.question.title}: ${question.question.description}`;
-      const aiExplanation = await generateExplanation(fullQuestion, includeCode);
+      const aiExplanation = await generateExplanation(fullQuestion, includeCode, undefined, question.question.id);
       setExplanations(prev => ({ ...prev, [key]: aiExplanation }));
     } catch (error) {
       setExplanations(prev => ({ 
