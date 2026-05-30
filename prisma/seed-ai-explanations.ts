@@ -3,6 +3,18 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import { aiExplanations } from './data/ai-explanations.js';
+import { aiExplanations2 } from './data/ai-exp-batch1.js';
+import { aiExpBatch2 } from './data/ai-exp-batch2.js';
+import { aiExpBatch3 } from './data/ai-exp-batch3.js';
+import { aiExpBatch4 } from './data/ai-exp-batch4.js';
+
+const ALL_EXPLANATIONS: Record<string, string> = {
+  ...aiExplanations,
+  ...aiExplanations2,
+  ...aiExpBatch2,
+  ...aiExpBatch3,
+  ...aiExpBatch4,
+};
 
 const prisma = new PrismaClient();
 
@@ -13,7 +25,7 @@ async function main() {
   let updated = 0, skipped = 0;
 
   for (const q of questions) {
-    const aiExp = aiExplanations[q.title];
+    const aiExp = ALL_EXPLANATIONS[q.title];
     if (!aiExp) { skipped++; continue; }
 
     await prisma.question.update({
